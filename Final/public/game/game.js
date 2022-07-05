@@ -66,7 +66,8 @@ class Game {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     this.cube = new THREE.Mesh(geometry, material);
     // this.scene.add(this.cube);
-    this.camera.position.z = 3;
+    this.camera.position.z = 10;
+    this.camera.position.y = 10;
   }
 
 
