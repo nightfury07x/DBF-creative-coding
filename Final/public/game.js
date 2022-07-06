@@ -27,7 +27,7 @@ export default class Game {
     this.setCamera();
     this.setLights();
     this.setWorld();
-    this.setOrbitControls();
+    // this.setOrbitControls();
     this.loadEnvironment(loader);
     this.loadPlayer();
     this.animate();
@@ -141,7 +141,7 @@ export default class Game {
 
     const lightSize = 500;
     light.shadow.camera.near = 1;
-    light.shadow.camera.far = 500;
+    light.shadow.camera.far = 5000;
     light.shadow.camera.left = light.shadow.camera.bottom = -lightSize;
     light.shadow.camera.right = light.shadow.camera.top = lightSize;
 
@@ -179,14 +179,14 @@ export default class Game {
     this.scene.add(grid);
   }
 
-  setOrbitControls() {
-    this.controls = new THREE.OrbitControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    this.controls.target.set(0, 10, 0);
-    this.controls.update();
-  }
+  // setOrbitControls() {
+  //   this.controls = new THREE.OrbitControls(
+  //     this.camera,
+  //     this.renderer.domElement
+  //   );
+  //   this.controls.target.set(0, 10, 0);
+  //   this.controls.update();
+  // }
 
   loadEnvironment(loader) {
     const game = this;
@@ -281,7 +281,7 @@ export default class Game {
     front.position.set(112, 100, 600);
     front.parent = this.player.object;
     const back = new THREE.Object3D();
-    back.position.set(0, 400, -600);
+    back.position.set(0, 400, -1000);
     back.parent = this.player.object;
     const chat = new THREE.Object3D();
     chat.position.set(0, 200, -450);
@@ -308,9 +308,10 @@ export default class Game {
     ) {
       const newPosition = new THREE.Vector3();
       this.cameras.active.getWorldPosition(newPosition);
-      this.camera.position.lerp(newPosition, 0.04);
+      this.camera.position.lerp(newPosition, 0.2);
     }
     const pos = this.player.object.position.clone();
+    pos.add(new THREE.Vector3(0, 50, 0))
     // console.log('active', this.camera.position);
     this.camera.lookAt(pos);
   }

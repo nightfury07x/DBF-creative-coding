@@ -4,19 +4,22 @@ class Player {
     this.game = game;
     this.local = true;
     // this.options = type;
-    this.anims = ["run2", "idle", "jump"];
+    this.anims = ["run2", "idle", "jump", "back"];
     this.animations = {};
-    this.init(game, options);
     this.dirs = [];
+    this.currDir = new THREE.Vector3(0, 0, 1);
+    this.axis = new THREE.Vector3(0, 1, 0);
+    this.init(game, options);
   }
 
   init(game, options) {
     // event listeners
-    window.addEventListener("keydown", this.move.bind(this));
+    window.addEventListener("keydown", this.checkKey.bind(this));
     window.addEventListener("keyup", this.filterKey.bind(this));
     let model = "characterMedium";
     let skin;
     if (options == undefined) {
+      // means it is local player
       const skins = [
         "criminalMale",
         "cyborgFemale",
@@ -24,13 +27,13 @@ class Player {
         "skaterMale",
       ];
       skin = skins[Math.floor(Math.random() * skins.length)];
-    } else if (typeof options == "object") {
+    }
+    if (typeof options == "object") {
       this.local = false;
       this.options = options;
       this.id = options.id;
       skin = options.skin;
     }
-
     this.model = model;
     this.skin = skin;
     this.game = game;
@@ -45,7 +48,8 @@ class Player {
       player.mixer = object.mixer;
 
       object.name = "Person";
-
+      console.log("object ", object.rotation._x);
+      // this.currRotation = object.rotation;
       object.traverse(function (child) {
         if (child.isMesh) {
           child.castShadow = true;
@@ -77,7 +81,7 @@ class Player {
 
       player.object.add(object);
       player.loadAnim(loader);
-      console.log("should have called");
+      console.log("should have called", player.local);
       if (player.deleted === undefined) {
         console.log("adding player to scene");
         game.scene.add(player.object);
@@ -86,10 +90,18 @@ class Player {
       }
 
       if (player.local) {
+        console.log(io);
         game.createCameras();
-        game.sun.target = game.player.object;
-        game.animations.Idle = object.animations[0];
         // if (player.initSocket !== undefined) player.initSocket();
+        player.socket = io.connect();
+        // player.socket.emit("init", {
+        //   skin: player.skin,
+        //   x: player.object.position.x,
+        //   y: player.object.position.y,
+        //   z: player.object.position.z,
+        //   h: player.object.rotation.y,
+        //   pb: player.object.rotation.x
+        // });
       } else {
         const geometry = new THREE.BoxGeometry(100, 300, 100);
         const material = new THREE.MeshBasicMaterial({ visible: false });
@@ -110,62 +122,42 @@ class Player {
     });
   }
 
-  move(event) {
-    this.checkKey(event);
-    // this.moveUpdate(dt);
-  }
   moveUpdate(dt) {
     if (this.dirs.length == 0) {
       this.action = "idle";
       return;
     }
-    const speed = 300;
-    var deltaPosition = new THREE.Vector3(0, 0, 0);
+    const speed = 400;
+    var angle;
     this.dirs.forEach((dir) => {
       switch (dir) {
         case "left":
-          deltaPosition.add(new THREE.Vector3(dt * speed, 0, 0));
+          angle = Math.PI / 128;
+          this.currDir.applyAxisAngle(this.axis, angle);
+          this.object.rotateY(angle);
           break;
         case "right":
-          deltaPosition.add(new THREE.Vector3(dt * -speed, 0, 0));
+          angle = -Math.PI / 128;
+          this.currDir.applyAxisAngle(this.axis, angle);
+          this.object.rotateY(angle);
           break;
         case "forward":
-          deltaPosition.add(new THREE.Vector3(0, 0, dt * speed));
+          this.object.position.add(
+            this.currDir.clone().multiplyScalar(dt * speed)
+          );
+          this.action = "run2";
           break;
         case "backward":
-          deltaPosition.add(new THREE.Vector3(0, 0, dt * -speed));
+          this.object.position.add(
+            this.currDir.clone().multiplyScalar(dt * -speed)
+          );
+          this.action = "back";
           break;
         default:
           break;
       }
-
-      if (this.dirs.includes("left") && this.dirs.includes("forward")) {
-        this.object.rotation.set(0, Math.PI / 4, 0);
-      } else if (this.dirs.includes("right") && this.dirs.includes("forward")) {
-        this.object.rotation.set(0, -Math.PI / 4, 0);
-      } else if (this.dirs.includes("left") && this.dirs.includes("backward")) {
-        this.object.rotation.set(0, (-5 * Math.PI) / 4, 0);
-      } else if (
-        this.dirs.includes("right") &&
-        this.dirs.includes("backward")
-      ) {
-        this.object.rotation.set(0, (5 * Math.PI) / 4, 0);
-      } else if (this.dirs.includes("left")) {
-        this.object.rotation.set(0, Math.PI / 2, 0);
-      } else if (this.dirs.includes("right")) {
-        this.object.rotation.set(0, -Math.PI / 2, 0);
-      } else if (this.dirs.includes("forward")) {
-        this.object.rotation.set(0, 0, 0);
-      } else if (this.dirs.includes("backward")) {
-        this.object.rotation.set(0, Math.PI, 0);
-      }
     });
-    this.object.position.add(deltaPosition);
-    // if (deltaPosition.length() == 0) {
-    //     this.action = 'idle'
-    //     return;
-    // }
-    this.action = "run2";
+    this.updateSocket();
   }
 
   loadAnim(loader) {
@@ -229,11 +221,11 @@ class Player {
 
   filterKey(event) {
     var filtered = [];
-    if (event.key == "a" || event.key == "A" || event.key == "ArrowLeft") {
+    if (event.key == "a" || event.key == "A") {
       filtered = this.dirs.filter((dir) => dir != "left");
     } else if (event.key == "d" || event.key == "D") {
       filtered = this.dirs.filter((dir) => dir != "right");
-    } else if (event.key == "w" || event.key == "W" || event.key == "ArrowUp") {
+    } else if (event.key == "w" || event.key == "W") {
       filtered = this.dirs.filter((dir) => dir != "forward");
     } else if (event.key == "s" || event.key == "S") {
       filtered = this.dirs.filter((dir) => dir != "backward");
@@ -243,5 +235,19 @@ class Player {
     if (this.dirs.length == 0) {
       this.action = "idle";
     }
+  }
+
+  updateSocket() {
+    if (this.socket !== undefined){
+			//console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
+			this.socket.emit('update', {
+				x: this.object.position.x,
+				y: this.object.position.y,
+				z: this.object.position.z,
+				h: this.object.rotation.y,
+				pb: this.object.rotation.x,
+				action: this.action
+			})
+		}
   }
 }

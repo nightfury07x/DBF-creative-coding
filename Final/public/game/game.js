@@ -56,10 +56,9 @@ class Game {
     this.container.appendChild(this.renderer.domElement);
 
     this.player = new Player(this);
-    // this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
 
     const size = 10000;
-    const divisions = 10;
+    const divisions = 20;
 
     const gridHelper = new THREE.GridHelper(size, divisions);
     this.scene.add(gridHelper);
@@ -78,7 +77,7 @@ class Game {
     front.position.set(112, 100, 600);
     front.parent = this.player.object;
     const back = new THREE.Object3D();
-    back.position.set(0, 400, -600);
+    back.position.set(0, 500, -600);
     back.parent = this.player.object;
     const chat = new THREE.Object3D();
     chat.position.set(0, 200, -450);
@@ -105,11 +104,13 @@ class Game {
     ) {
       const newPosition = new THREE.Vector3();
       this.cameras.active.getWorldPosition(newPosition);
-      this.camera.position.lerp(newPosition, 0.04);
+      this.camera.position.lerp(newPosition, 0.1);
     }
     const pos = this.player.object.position.clone();
     // console.log('active', this.camera.position);
-    this.camera.lookAt(pos);
+    // this.camera.currentLookat.lerp(pos, 0.1);
+    // console.log('CAMERA' , this.camera);
+    // this.camera.lookAt(pos);
   }
 
   onWindowResize() {
@@ -138,9 +139,9 @@ class Game {
     }
 
     //update player movement;
+    this.checkCamera();
     this.player.moveUpdate(dt);
     // camera setting
-    this.checkCamera();
     // light
     if (this.sun !== undefined) {
       this.sun.position.copy(this.camera.position);
@@ -151,7 +152,6 @@ class Game {
     requestAnimationFrame(function () {
       game.animate();
     });
-    // this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
 }
