@@ -8,6 +8,7 @@ class Player {
     this.animations = {};
     this.init(game, options);
     this.dirs = [];
+    this.obj;
   }
 
   init(game, options) {
