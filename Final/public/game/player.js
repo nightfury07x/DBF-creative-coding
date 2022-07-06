@@ -1,5 +1,6 @@
 class Player {
   constructor(game, options) {
+    // this.deltaPosition = new THREE.Vector3(0, 0, 0);
     this.game = game;
     this.local = true;
     // this.options = type;
@@ -87,7 +88,7 @@ class Player {
         game.createCameras();
         game.sun.target = game.player.object;
         game.animations.Idle = object.animations[0];
-        if (player.initSocket !== undefined) player.initSocket();
+        // if (player.initSocket !== undefined) player.initSocket();
       } else {
         const geometry = new THREE.BoxGeometry(100, 300, 100);
         const material = new THREE.MeshBasicMaterial({ visible: false });
@@ -109,14 +110,16 @@ class Player {
   }
 
   move(event) {
-    const dt = this.game.clock.getDelta();
     this.checkKey(event);
-    this.moveUpdate(dt);
+    // this.moveUpdate(dt);
   }
   moveUpdate(dt) {
+    if (this.dirs.length == 0) {
+      this.action = 'idle';
+      return;
+    }
     const speed = 300;
     var deltaPosition = new THREE.Vector3(0, 0, 0);
-    console.log('the dirs ', this.dirs);
     this.dirs.forEach((dir) => {
         switch (dir) {
             case "left":
@@ -154,19 +157,17 @@ class Player {
         }
     });
     this.object.position.add(deltaPosition);
-    if (deltaPosition.length() == 0) {
-        this.action = 'idle'
-        return;
-    }
+    // if (deltaPosition.length() == 0) {
+    //     this.action = 'idle'
+    //     return;
+    // }
     this.action = 'run2';
   }
 
 
   loadAnim(loader) {
     const scope = this;
-    console.log("load anim called", loader);
     let anim = this.anims.pop();
-    console.log("ANIMATION PATH", `static/Animations/${anim}.fbx`);
     loader.load(`static/Animations/${anim}.fbx`, function (object) {
       scope.animations[anim] = object.animations[0];
       if (scope.anims.length > 0) {
@@ -204,7 +205,7 @@ class Player {
 
 
   checkKey(event) {
-    if (event.repeat) return;
+    // if (event.repeat) return;
     if (event.key == "a" || event.key == "A") {
         if (this.dirs.includes('left') == false){
             this.dirs.push("left");
@@ -240,9 +241,6 @@ class Player {
     this.dirs = filtered;
     if (this.dirs.length == 0) {
       this.action = 'idle';
-    } else {
-        const dt = this.game.clock.getDelta();
-        this.moveUpdate(dt);
-    }
+    } 
   }
 }
