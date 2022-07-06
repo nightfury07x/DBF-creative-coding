@@ -29,6 +29,7 @@ export default class Game {
     this.setWorld();
     this.setOrbitControls();
     this.loadEnvironment(loader);
+    this.loadPlayer();
     this.animate();
   }
 
@@ -267,15 +268,87 @@ export default class Game {
     }
   }
 
+  /**
+   * CAMERAS
+   */
+  set activeCamera(object) {
+    this.cameras.active = object;
+  }
+
+  createCameras() {
+    const offset = new THREE.Vector3(0, 80, 0);
+    const front = new THREE.Object3D();
+    front.position.set(112, 100, 600);
+    front.parent = this.player.object;
+    const back = new THREE.Object3D();
+    back.position.set(0, 400, -600);
+    back.parent = this.player.object;
+    const chat = new THREE.Object3D();
+    chat.position.set(0, 200, -450);
+    chat.parent = this.player.object;
+    const wide = new THREE.Object3D();
+    wide.position.set(178, 139, 1665);
+    wide.parent = this.player.object;
+    const overhead = new THREE.Object3D();
+    overhead.position.set(0, 400, 0);
+    overhead.parent = this.player.object;
+    const collect = new THREE.Object3D();
+    collect.position.set(40, 82, 94);
+    collect.parent = this.player.object;
+    this.cameras = { front, back, wide, overhead, collect, chat };
+    this.activeCamera = this.cameras.back;
+  }
+
+  checkCamera() {
+    if (
+      this.cameras != undefined &&
+      this.cameras.active != undefined &&
+      this.player !== undefined &&
+      this.player.object !== undefined
+    ) {
+      const newPosition = new THREE.Vector3();
+      this.cameras.active.getWorldPosition(newPosition);
+      this.camera.position.lerp(newPosition, 0.04);
+    }
+    const pos = this.player.object.position.clone();
+    // console.log('active', this.camera.position);
+    this.camera.lookAt(pos);
+  }
+
+  onWindowResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  loadPlayer() {
+    this.player = new Player(this);
+  }
+
   animate() {
     const game = this;
+
+    const dt = this.clock.getDelta();
+    if (this.player.mixer != undefined) {
+      this.player.mixer.update(dt);
+    }
+
+    //update player movement;
+    this.player.moveUpdate(dt);
+    // camera setting
+    this.checkCamera();
+    // light
+    if (this.sun !== undefined) {
+      this.sun.position.copy(this.camera.position);
+      this.sun.position.y += 10;
+    }
 
     requestAnimationFrame(function () {
       game.animate();
     });
 
-    this.delta = this.clock.getDelta();
-    if (this.physicsWorld) game.updatePhysics(this.delta);
+    if (this.physicsWorld) game.updatePhysics(dt);
     this.renderer.render(this.scene, this.camera);
   }
 }

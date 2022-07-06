@@ -71,7 +71,8 @@ class Player {
       });
 
       player.object = new THREE.Object3D();
-    //   player.object.position.set(3122, 0, -173);
+      player.object.scale.multiplyScalar(0.25);
+      //   player.object.position.set(3122, 0, -173);
       player.object.rotation.set(0, 0, 0);
 
       player.object.add(object);
@@ -115,55 +116,57 @@ class Player {
   }
   moveUpdate(dt) {
     if (this.dirs.length == 0) {
-      this.action = 'idle';
+      this.action = "idle";
       return;
     }
     const speed = 300;
     var deltaPosition = new THREE.Vector3(0, 0, 0);
     this.dirs.forEach((dir) => {
-        switch (dir) {
-            case "left":
-                deltaPosition.add(new THREE.Vector3((dt * speed), 0, 0));
-                break;
-            case "right":
-                deltaPosition.add(new THREE.Vector3((dt * -speed), 0, 0));
-                break;
-            case "forward":
-                deltaPosition.add(new THREE.Vector3(0, 0, (dt * speed)));
-                break;
-            case "backward":
-                deltaPosition.add(new THREE.Vector3(0, 0, (dt * -speed)));
-                break;
-            default:
-                break;
-        }
+      switch (dir) {
+        case "left":
+          deltaPosition.add(new THREE.Vector3(dt * speed, 0, 0));
+          break;
+        case "right":
+          deltaPosition.add(new THREE.Vector3(dt * -speed, 0, 0));
+          break;
+        case "forward":
+          deltaPosition.add(new THREE.Vector3(0, 0, dt * speed));
+          break;
+        case "backward":
+          deltaPosition.add(new THREE.Vector3(0, 0, dt * -speed));
+          break;
+        default:
+          break;
+      }
 
-        if (this.dirs.includes('left') && this.dirs.includes('forward')){
-            this.object.rotation.set(0, Math.PI/4, 0);
-        } else if (this.dirs.includes('right') && this.dirs.includes('forward')) {
-            this.object.rotation.set(0, -Math.PI/4, 0);
-        } else if (this.dirs.includes('left') && this.dirs.includes('backward')) {
-            this.object.rotation.set(0, (-5 * Math.PI / 4), 0);
-        } else if (this.dirs.includes('right') && this.dirs.includes('backward')) {
-            this.object.rotation.set(0,( 5 * Math.PI / 4), 0 );
-        } else if (this.dirs.includes('left') ){
-            this.object.rotation.set(0, Math.PI/2, 0);
-        } else if (this.dirs.includes('right') ){
-            this.object.rotation.set(0, - Math.PI/2, 0);
-        } else if (this.dirs.includes('forward') ){
-            this.object.rotation.set(0, 0, 0);
-        } else if (this.dirs.includes('backward') ){
-            this.object.rotation.set(0, Math.PI, 0);
-        }
+      if (this.dirs.includes("left") && this.dirs.includes("forward")) {
+        this.object.rotation.set(0, Math.PI / 4, 0);
+      } else if (this.dirs.includes("right") && this.dirs.includes("forward")) {
+        this.object.rotation.set(0, -Math.PI / 4, 0);
+      } else if (this.dirs.includes("left") && this.dirs.includes("backward")) {
+        this.object.rotation.set(0, (-5 * Math.PI) / 4, 0);
+      } else if (
+        this.dirs.includes("right") &&
+        this.dirs.includes("backward")
+      ) {
+        this.object.rotation.set(0, (5 * Math.PI) / 4, 0);
+      } else if (this.dirs.includes("left")) {
+        this.object.rotation.set(0, Math.PI / 2, 0);
+      } else if (this.dirs.includes("right")) {
+        this.object.rotation.set(0, -Math.PI / 2, 0);
+      } else if (this.dirs.includes("forward")) {
+        this.object.rotation.set(0, 0, 0);
+      } else if (this.dirs.includes("backward")) {
+        this.object.rotation.set(0, Math.PI, 0);
+      }
     });
     this.object.position.add(deltaPosition);
     // if (deltaPosition.length() == 0) {
     //     this.action = 'idle'
     //     return;
     // }
-    this.action = 'run2';
+    this.action = "run2";
   }
-
 
   loadAnim(loader) {
     const scope = this;
@@ -203,44 +206,42 @@ class Player {
     return this.actionName;
   }
 
-
   checkKey(event) {
     // if (event.repeat) return;
     if (event.key == "a" || event.key == "A") {
-        if (this.dirs.includes('left') == false){
-            this.dirs.push("left");
-        }
+      if (this.dirs.includes("left") == false) {
+        this.dirs.push("left");
+      }
     } else if (event.key == "d" || event.key == "D") {
-        if (this.dirs.includes('right') == false){
-            this.dirs.push("right");
-        }
+      if (this.dirs.includes("right") == false) {
+        this.dirs.push("right");
+      }
     } else if (event.key == "w" || event.key == "W") {
-        if (this.dirs.includes('forward') == false){
-            this.dirs.push("forward");
-        }
+      if (this.dirs.includes("forward") == false) {
+        this.dirs.push("forward");
+      }
     } else if (event.key == "s" || event.key == "S") {
-        if (this.dirs.includes('backward') == false){
-            this.dirs.push("backward");
-        }
-
+      if (this.dirs.includes("backward") == false) {
+        this.dirs.push("backward");
+      }
     }
   }
 
   filterKey(event) {
     var filtered = [];
     if (event.key == "a" || event.key == "A" || event.key == "ArrowLeft") {
-      filtered = this.dirs.filter(dir => dir != "left");
+      filtered = this.dirs.filter((dir) => dir != "left");
     } else if (event.key == "d" || event.key == "D") {
-      filtered = this.dirs.filter(dir => dir != "right");
+      filtered = this.dirs.filter((dir) => dir != "right");
     } else if (event.key == "w" || event.key == "W" || event.key == "ArrowUp") {
-      filtered = this.dirs.filter(dir => dir != "forward");
+      filtered = this.dirs.filter((dir) => dir != "forward");
     } else if (event.key == "s" || event.key == "S") {
-      filtered = this.dirs.filter(dir => dir != "backward");
+      filtered = this.dirs.filter((dir) => dir != "backward");
     }
 
     this.dirs = filtered;
     if (this.dirs.length == 0) {
-      this.action = 'idle';
-    } 
+      this.action = "idle";
+    }
   }
 }
