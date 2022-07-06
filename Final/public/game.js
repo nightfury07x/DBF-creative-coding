@@ -341,7 +341,7 @@ export default class Game {
       this.camera.position.lerp(newPosition, 0.2);
     }
     const pos = this.player.object.position.clone();
-    pos.add(new THREE.Vector3(0, 50, 0))
+    pos.add(new THREE.Vector3(0, 50, 0));
     // console.log('active', this.camera.position);
     this.camera.lookAt(pos);
   }

@@ -142,9 +142,15 @@ class Player {
           this.object.rotateY(angle);
           break;
         case "forward":
+          // const velocity = new Ammo.btVector3(100, 0, 0);
+          // let physicsBody = this.object.userData.physicsBody;
+          // physicsBody.setLinearVelocity(velocity);
+          // Ammo.destroy(velocity);
+
           this.object.position.add(
             this.currDir.clone().multiplyScalar(dt * speed)
           );
+
           this.action = "run2";
           break;
         case "backward":
@@ -238,16 +244,16 @@ class Player {
   }
 
   updateSocket() {
-    if (this.socket !== undefined){
-			//console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
-			this.socket.emit('update', {
-				x: this.object.position.x,
-				y: this.object.position.y,
-				z: this.object.position.z,
-				h: this.object.rotation.y,
-				pb: this.object.rotation.x,
-				action: this.action
-			})
-		}
+    if (this.socket !== undefined) {
+      //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
+      this.socket.emit("update", {
+        x: this.object.position.x,
+        y: this.object.position.y,
+        z: this.object.position.z,
+        h: this.object.rotation.y,
+        pb: this.object.rotation.x,
+        action: this.action,
+      });
+    }
   }
 }
