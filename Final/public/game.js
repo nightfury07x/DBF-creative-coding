@@ -26,10 +26,9 @@ export default class Game {
     this.setRenderer();
     this.setCamera();
     this.setLights();
-    this.setWorld();
     // this.setOrbitControls();
-    this.loadEnvironment(loader);
-    this.loadPlayer();
+    // this.loadEnvironment(loader);
+
     this.animate();
   }
 
@@ -49,22 +48,25 @@ export default class Game {
       solver,
       collisionConfiguration
     );
-    this.physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+    this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
-    this.createBall();
+    this.createBox(100, 300);
+    this.createBox(100, 400);
+    this.createBox(70, 200);
+    this.setWorld();
+    this.loadPlayer();
   }
 
-  createBall() {
-    let pos = { x: 0, y: 400, z: 0 };
+  createBox(x, height) {
+    let pos = { x: x, y: height, z: 0 };
     let radius = 50;
     let quat = { x: 0, y: 0, z: 0, w: 1 };
     let mass = 100;
 
-    //threeJS Section
-    let ball = new THREE.Mesh(
-      new THREE.SphereBufferGeometry(radius),
-      new THREE.MeshPhongMaterial({ color: 0xff0505 })
-    );
+    const geometry = new THREE.BoxGeometry(50, 50, 50);
+
+    const material = new THREE.MeshLambertMaterial({ color: "#81ecec" });
+    const ball = new THREE.Mesh(geometry, material);
 
     ball.position.set(pos.x, pos.y, pos.z);
 
@@ -73,7 +75,7 @@ export default class Game {
 
     this.scene.add(ball);
 
-    //Ammojs Section
+    //Ammo js Section
     let transform = new Ammo.btTransform();
     transform.setIdentity();
     transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
@@ -82,7 +84,9 @@ export default class Game {
     );
     let motionState = new Ammo.btDefaultMotionState(transform);
 
-    let colShape = new Ammo.btSphereShape(radius);
+    let colShape = new Ammo.btBoxShape(
+      new Ammo.btVector3(50 * 0.5, 50 * 0.5, 50 * 0.5)
+    );
     colShape.setMargin(0.05);
 
     let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -151,16 +155,16 @@ export default class Game {
 
     this.sun = light;
     this.scene.add(light);
-
-    // let light1 = new THREE.HemisphereLight(0xdddddd, 0x444444);
-    // light1.position.set(0, -100, 0);
-    // this.scene.add(light1);
   }
 
   initLights() {}
 
   setWorld() {
-    // ground
+    let pos = { x: 0, y: 0, z: 0 };
+    let scale = { x: 2000, y: 0, z: 2000 };
+    let quat = { x: 0, y: 0, z: 0, w: 10 };
+    let mass = 0;
+
     const floor = new Floor();
     this.scene.add(floor);
 
@@ -171,6 +175,32 @@ export default class Game {
     mesh.rotation.x = -Math.PI / 2;
     mesh.receiveShadow = true;
     this.scene.add(mesh);
+
+    let transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+    transform.setRotation(
+      new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+    );
+    let motionState = new Ammo.btDefaultMotionState(transform);
+
+    let colShape = new Ammo.btBoxShape(
+      new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
+    );
+    colShape.setMargin(0.05);
+
+    let localInertia = new Ammo.btVector3(0, 0, 0);
+    colShape.calculateLocalInertia(mass, localInertia);
+
+    let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+      mass,
+      motionState,
+      colShape,
+      localInertia
+    );
+    let body = new Ammo.btRigidBody(rbInfo);
+
+    this.physicsWorld.addRigidBody(body);
 
     var grid = new THREE.GridHelper(2000, 40, 0x000000, 0x000000);
     grid.material.opacity = 0.2;
@@ -281,7 +311,7 @@ export default class Game {
     front.position.set(112, 100, 600);
     front.parent = this.player.object;
     const back = new THREE.Object3D();
-    back.position.set(0, 400, -1000);
+    back.position.set(0, 400, -1500);
     back.parent = this.player.object;
     const chat = new THREE.Object3D();
     chat.position.set(0, 200, -450);
@@ -323,8 +353,47 @@ export default class Game {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  loadPlayer() {
+  async loadPlayer() {
     this.player = new Player(this);
+
+    const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+    await delay(1000);
+
+    if (this.player.object) {
+      const mass = 10;
+      const pos = this.player.object.position.clone();
+      const quat = { x: 0, y: 0, z: 0, w: 1 };
+
+      let transform = new Ammo.btTransform();
+      transform.setIdentity();
+      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+      transform.setRotation(
+        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      );
+      let motionState = new Ammo.btDefaultMotionState(transform);
+
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(1 * 0.5, 1 * 0.5, 1 * 0.5)
+      );
+      colShape.setMargin(0.05);
+
+      let localInertia = new Ammo.btVector3(0, 0, 0);
+      colShape.calculateLocalInertia(mass, localInertia);
+
+      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+        mass,
+        motionState,
+        colShape,
+        localInertia
+      );
+      let body = new Ammo.btRigidBody(rbInfo);
+
+      this.physicsWorld.addRigidBody(body);
+
+      this.player.object.userData.physicsBody = body;
+      this.rigidBodies.push(this.player.object);
+    }
   }
 
   animate() {
