@@ -4,12 +4,14 @@ class Player {
     this.game = game;
     this.local = true;
     // this.options = type;
-    this.anims = ["run2", "idle", "jump", "back"];
+    this.anims = ["run2", "idle", "jump", "back", "push"];
     this.animations = {};
     this.dirs = [];
     this.currDir = new THREE.Vector3(0, 0, 1);
     this.axis = new THREE.Vector3(0, 1, 0);
     this.init(game, options);
+    // this.raycaster = new THREE.Raycaster();
+    this.blocked = false;
   }
 
   init(game, options) {
@@ -127,14 +129,18 @@ class Player {
       this.action = "idle";
       return;
     }
+
     const speed = 400;
     var angle;
+    let blocked = false;
+    let anim = "run2";
     this.dirs.forEach((dir) => {
       switch (dir) {
         case "left":
           angle = Math.PI / 128;
           this.currDir.applyAxisAngle(this.axis, angle);
           this.object.rotateY(angle);
+
           break;
         case "right":
           angle = -Math.PI / 128;
@@ -142,16 +148,40 @@ class Player {
           this.object.rotateY(angle);
           break;
         case "forward":
-          // const velocity = new Ammo.btVector3(100, 0, 0);
-          // let physicsBody = this.object.userData.physicsBody;
-          // physicsBody.setLinearVelocity(velocity);
-          // Ammo.destroy(velocity);
+          const pos = this.object.position.clone();
+          pos.y += 30;
+          let direction = new THREE.Vector3();
+          this.object.getWorldDirection(direction);
+          let raycaster = new THREE.Raycaster(pos, direction);
+          const colliders = this.game.colliders;
 
-          this.object.position.add(
-            this.currDir.clone().multiplyScalar(dt * speed)
-          );
+          // blocked = this.game.sphereBBox.intersectsBox(this.game.cubeBBox);
+          const intersect = raycaster.intersectObjects(colliders);
 
-          this.action = "run2";
+          if (intersect.length > 0) {
+            if (intersect[0].distance < 60) {
+              blocked = true;
+            }
+          }
+
+          if (!blocked) {
+            this.object.position.add(
+              this.currDir.clone().multiplyScalar(dt * speed)
+            );
+            anim = "run2";
+          } else {
+            this.object.position.add(
+              this.currDir.clone().multiplyScalar(dt * 25)
+            );
+            const physicsBody = this.game.rigidBodies[0].userData.physicsBody;
+            let vr = this.currDir.clone();
+            const velocity = new Ammo.btVector3(vr.x, vr.y, vr.z);
+            velocity.op_mul(25);
+            physicsBody.setLinearVelocity(velocity);
+            anim = "push";
+          }
+
+          this.action = anim;
           break;
         case "backward":
           this.object.position.add(
@@ -160,6 +190,10 @@ class Player {
           this.action = "back";
           break;
         default:
+          this.game.push = false;
+          const stop = new Ammo.btVector3(0, 0, 0);
+          stop.op_mul(0);
+          physicsBody.setLinearVelocity(stop);
           break;
       }
     });
