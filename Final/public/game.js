@@ -35,7 +35,7 @@ export default class Game {
     this.setCamera();
     this.setLights();
     // this.setOrbitControls();
-    this.loadEnvironment(glbLoader);
+    // this.loadEnvironment(glbLoader);
 
     this.animate();
   }
@@ -58,7 +58,7 @@ export default class Game {
     );
     this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
-    this.createBox(100, 25);
+    this.createBox(100, 50);
     // this.createBox(100, 400);
     // this.createBox(70, 200);
     this.setWorld();
@@ -256,11 +256,21 @@ export default class Game {
 
     loader.load(`${this.assetsPath}fbx/trees/barrel.glb`, function (object) {
       const sword = object.scene; // sword 3D object is loaded
+
+      sword.traverse(function (child) {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.material.metalness = 0;
+        }
+      });
+
       sword.scale.set(200, 200, 200);
+
       sword.position.y = 4;
       sword.position.z = 4;
       sword.position.x = 4;
-      sword.castShadow = true;
+
       game.scene.add(sword);
     });
   }

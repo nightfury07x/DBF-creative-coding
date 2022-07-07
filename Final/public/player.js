@@ -209,7 +209,7 @@ class Player {
             anim = "push";
           }
 
-          console.log(blocked);
+          // console.log(blocked);
           this.action = anim;
           break;
         case "backward":
