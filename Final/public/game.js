@@ -31,7 +31,7 @@ export default class Game {
     this.setCamera();
     this.setLights();
     // this.setOrbitControls();
-    // this.loadEnvironment(loader);
+    this.loadEnvironment(loader);
 
     this.animate();
   }
@@ -221,12 +221,12 @@ export default class Game {
   //   this.controls.target.set(0, 10, 0);
   //   this.controls.update();
   // }
-
+  
   loadEnvironment(loader) {
     const game = this;
-    loader.load(`${this.assetsPath}fbx/trees/tree4.fbx`, function (object) {
-      object.name = "Tree";
-
+    loader.load(`${this.assetsPath}fbx/survival/rockA.fbx`, function (object) {
+      object.name = "rockFlatGlass";
+      console.log('loading');
       object.traverse(function (child) {
         if (child.isMesh) {
           child.material.map = null;
@@ -234,10 +234,26 @@ export default class Game {
           child.receiveShadow = false;
         }
       });
-      object.position.y = 165;
+      // object.position.y = 165;
       // object.position.x = 200;
       game.scene.add(object);
     });
+    // loader.load(`${this.assetsPath}fbx/trees/tree5.fbx`, function (object) {
+    //   object.name = "Tree";
+
+    //   object.traverse(function (child) {
+    //     if (child.isMesh) {
+    //       child.material.map = null;
+    //       child.castShadow = true;
+    //       child.receiveShadow = false;
+    //     }
+    //   });
+    //   object.position.y = 165;
+    //   // object.position.x = 200;
+    //   game.scene.add(object);
+    // });
+
+    console.log('object');
   }
 
   loadObjects() {
