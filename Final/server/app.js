@@ -22,4 +22,56 @@ io.sockets.on("connection", myConnection);
 
 function myConnection(socket) {
   console.log("new connection id :" + socket.id);
+  socket.userData = { x: 0, y: 0, z: 0, heading: 0 }; //Default values;
+  socket.emit("setId", { id: socket.id });
+
+  socket.on("init", function (data) {
+    console.log("INIT");
+    socket.userData.skin = data.skin;
+    socket.userData.x = data.x;
+    socket.userData.y = data.y;
+    socket.userData.z = data.z;
+    socket.userData.heading = data.h;
+    (socket.userData.pb = data.pb), (socket.userData.action = "idle");
+  });
+  socket.on("disconnect", function () {
+    socket.broadcast.emit("deletePlayer", { id: socket.id });
+  });
+
+  socket.on("update", function (data) {
+    socket.userData.x = data.x;
+    socket.userData.y = data.y;
+    socket.userData.z = data.z;
+    socket.userData.heading = data.h;
+    (socket.userData.pb = data.pb), (socket.userData.action = data.action);
+  });
 }
+
+setInterval(function () {
+  const nsp = io.of("/");
+  let pack = [];
+  // console.log(io.sockets.sockets);
+  // console.log(io.sockets.clients());
+
+  for (let id in io.sockets.sockets) {
+    const socket = nsp.connected[id];
+    // console.log('socket ', socket);
+    //Only push sockets that have been initialised
+    if (socket.userData.skin !== undefined) {
+      pack.push({
+        id: socket.id,
+        skin: socket.userData.skin,
+        x: socket.userData.x,
+        y: socket.userData.y,
+        z: socket.userData.z,
+        heading: socket.userData.heading,
+        pb: socket.userData.pb,
+        action: socket.userData.action,
+      });
+    }
+  }
+  // console.log('packing');
+  if (pack.length > 0) {
+    io.emit("remoteData", pack);
+  }
+}, 40);

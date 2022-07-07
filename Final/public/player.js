@@ -96,14 +96,42 @@ class Player {
         game.createCameras();
         // if (player.initSocket !== undefined) player.initSocket();
         player.socket = io.connect();
-        // player.socket.emit("init", {
-        //   skin: player.skin,
-        //   x: player.object.position.x,
-        //   y: player.object.position.y,
-        //   z: player.object.position.z,
-        //   h: player.object.rotation.y,
-        //   pb: player.object.rotation.x
-        // });
+        player.socket.emit("init", {
+          skin: player.skin,
+          x: player.object.position.x,
+          y: player.object.position.y,
+          z: player.object.position.z,
+          h: player.object.rotation.y,
+          pb: player.object.rotation.x,
+        });
+        player.socket.on("setId", function (data) {
+          player.id = data.id;
+        });
+        player.socket.on("remoteData", function (data) {
+          game.remoteData = data;
+        });
+        player.socket.on("deletePlayer", function (data) {
+          const players = game.remotePlayers.filter(function (player) {
+            if (player.id == data.id) {
+              return player;
+            }
+          });
+          // if player not in remotePlayers, remove from scene
+          if (players.length > 0) {
+            let index = game.remotePlayers.indexOf(players[0]);
+            if (index != -1) {
+              game.remotePlayers.splice(index, 1);
+              game.scene.remove(players[0].object);
+            }
+          } else {
+            index = game.initialisingPlayers.indexOf(data.id);
+            if (index != -1) {
+              const player = game.initialisingPlayers[index];
+              player.deleted = true;
+              game.initialisingPlayers.splice(index, 1);
+            }
+          }
+        });
       } else {
         const geometry = new THREE.BoxGeometry(100, 300, 100);
         const material = new THREE.MeshBasicMaterial({ visible: false });
@@ -185,7 +213,7 @@ class Player {
           break;
         case "backward":
           this.object.position.add(
-            this.currDir.clone().multiplyScalar(dt * -speed)
+            this.currDir.clone().multiplyScalar((dt * -speed) / 2)
           );
           this.action = "back";
           break;
@@ -224,6 +252,7 @@ class Player {
       : THREE.AnimationClip.parse(
           THREE.AnimationClip.toJSON(this.animations[name])
         );
+    if (this.local == false) console.log("CLIP", clip);
     const action = this.mixer.clipAction(clip);
     action.time = 0;
     this.mixer.stopAllAction();
@@ -267,14 +296,20 @@ class Player {
       filtered = this.dirs.filter((dir) => dir != "right");
     } else if (event.key == "w" || event.key == "W") {
       filtered = this.dirs.filter((dir) => dir != "forward");
+      console.log("idle action");
+      this.action = "idle";
     } else if (event.key == "s" || event.key == "S") {
       filtered = this.dirs.filter((dir) => dir != "backward");
+      this.action = "idle";
+      console.log("idle action");
     }
 
     this.dirs = filtered;
     if (this.dirs.length == 0) {
       this.action = "idle";
     }
+
+    this.updateSocket();
   }
 
   updateSocket() {
@@ -288,6 +323,24 @@ class Player {
         pb: this.object.rotation.x,
         action: this.action,
       });
+    }
+  }
+
+  update(dt) {
+    this.mixer.update(dt);
+
+    if (this.game.remoteData.length > 0) {
+      let found = false;
+      for (let data of this.game.remoteData) {
+        if (data.id != this.id) continue;
+        //Found the player
+        this.object.position.set(data.x, data.y, data.z);
+        const euler = new THREE.Euler(data.pb, data.heading, data.pb);
+        this.object.quaternion.setFromEuler(euler);
+        this.action = data.action;
+        found = true;
+      }
+      if (!found) this.game.removePlayer(this);
     }
   }
 }
