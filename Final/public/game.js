@@ -22,6 +22,7 @@ export default class Game {
     this.height = this.container.offsetHeight;
 
     const loader = new THREE.FBXLoader();
+    const glbLoader = new THREE.GLTFLoader();
     this.rigidBodies = [];
     this.colliders = [];
     this.push = false;
@@ -34,7 +35,7 @@ export default class Game {
     this.setCamera();
     this.setLights();
     // this.setOrbitControls();
-    this.loadEnvironment(loader);
+    this.loadEnvironment(glbLoader);
 
     this.animate();
   }
@@ -57,10 +58,11 @@ export default class Game {
     );
     this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
-    // this.createBox(100, 100);
+    this.createBox(100, 25);
     // this.createBox(100, 400);
     // this.createBox(70, 200);
     this.setWorld();
+    this.setWorldFence();
     this.loadPlayer();
   }
 
@@ -92,34 +94,34 @@ export default class Game {
     this.scene.add(box);
 
     // //Ammo js Section
-    let transform = new Ammo.btTransform();
-    transform.setIdentity();
-    transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    transform.setRotation(
-      new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-    );
-    let motionState = new Ammo.btDefaultMotionState(transform);
+    // let transform = new Ammo.btTransform();
+    // transform.setIdentity();
+    // transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+    // transform.setRotation(
+    //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+    // );
+    // let motionState = new Ammo.btDefaultMotionState(transform);
 
-    let colShape = new Ammo.btBoxShape(
-      new Ammo.btVector3(50 * 0.5, 50 * 0.5, 50 * 0.5)
-    );
-    colShape.setMargin(0.05);
+    // let colShape = new Ammo.btBoxShape(
+    //   new Ammo.btVector3(50 * 0.5, 50 * 0.5, 50 * 0.5)
+    // );
+    // colShape.setMargin(0.05);
 
-    let localInertia = new Ammo.btVector3(0, 0, 0);
-    colShape.calculateLocalInertia(mass, localInertia);
+    // let localInertia = new Ammo.btVector3(0, 0, 0);
+    // colShape.calculateLocalInertia(mass, localInertia);
 
-    let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      motionState,
-      colShape,
-      localInertia
-    );
-    let body = new Ammo.btRigidBody(rbInfo);
+    // let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+    //   mass,
+    //   motionState,
+    //   colShape,
+    //   localInertia
+    // );
+    // let body = new Ammo.btRigidBody(rbInfo);
 
-    this.physicsWorld.addRigidBody(body);
+    // this.physicsWorld.addRigidBody(body);
 
-    box.userData.physicsBody = body;
-    this.rigidBodies.push(box);
+    // box.userData.physicsBody = body;
+    // this.rigidBodies.push(box);
     this.colliders.push(box);
   }
 
@@ -237,23 +239,9 @@ export default class Game {
 
   loadEnvironment(loader) {
     const game = this;
-    loader.load(`${this.assetsPath}fbx/survival/rockA.fbx`, function (object) {
-      object.name = "rockFlatGlass";
-      console.log("loading");
-      object.traverse(function (child) {
-        if (child.isMesh) {
-          child.material.map = null;
-          child.castShadow = true;
-          child.receiveShadow = false;
-        }
-      });
-      // object.position.y = 165;
-      // object.position.x = 200;
-      game.scene.add(object);
-    });
-    // loader.load(`${this.assetsPath}fbx/trees/tree5.fbx`, function (object) {
-    //   object.name = "Tree";
-
+    // loader.load(`${this.assetsPath}fbx/survival/rockA.fbx`, function (object) {
+    //   object.name = "rockFlatGlass";
+    //   console.log("loading");
     //   object.traverse(function (child) {
     //     if (child.isMesh) {
     //       child.material.map = null;
@@ -261,12 +249,20 @@ export default class Game {
     //       child.receiveShadow = false;
     //     }
     //   });
-    //   object.position.y = 165;
+    //   // object.position.y = 165;
     //   // object.position.x = 200;
     //   game.scene.add(object);
     // });
 
-    console.log("object");
+    loader.load(`${this.assetsPath}fbx/trees/barrel.glb`, function (object) {
+      const sword = object.scene; // sword 3D object is loaded
+      sword.scale.set(200, 200, 200);
+      sword.position.y = 4;
+      sword.position.z = 4;
+      sword.position.x = 4;
+      sword.castShadow = true;
+      game.scene.add(sword);
+    });
   }
 
   loadObjects() {
@@ -512,6 +508,32 @@ export default class Game {
     this.remotePlayers.forEach(function (player) {
       player.update(dt);
     });
+  }
+
+  setWorldFence() {
+    const geometry = new THREE.BoxGeometry(2000, 40, 20);
+    const material = new THREE.MeshLambertMaterial({ color: "#81ecec" });
+    const box1 = new THREE.Mesh(geometry, material);
+    box1.position.set(0, 20, 1000);
+    this.scene.add(box1);
+
+    const box2 = new THREE.Mesh(geometry, material);
+    box2.position.set(0, 20, -1000);
+    this.scene.add(box2);
+
+    const geometry1 = new THREE.BoxGeometry(20, 40, 2000);
+    const box3 = new THREE.Mesh(geometry1, material);
+    box3.position.set(1000, 20, 0);
+    this.scene.add(box3);
+
+    const box4 = new THREE.Mesh(geometry1, material);
+    box4.position.set(-1000, 20, 0);
+    this.scene.add(box4);
+
+    this.colliders.push(box1);
+    this.colliders.push(box2);
+    this.colliders.push(box3);
+    this.colliders.push(box4);
   }
 
   animate() {

@@ -196,19 +196,20 @@ class Player {
             this.object.position.add(
               this.currDir.clone().multiplyScalar(dt * speed)
             );
-            anim = "run2";
+            anim = "push";
           } else {
-            this.object.position.add(
-              this.currDir.clone().multiplyScalar(dt * 25)
+            colliders[0].position.add(
+              this.currDir.clone().multiplyScalar(dt * speed)
             );
-            const physicsBody = this.game.rigidBodies[0].userData.physicsBody;
-            let vr = this.currDir.clone();
-            const velocity = new Ammo.btVector3(vr.x, vr.y, vr.z);
-            velocity.op_mul(25);
-            physicsBody.setLinearVelocity(velocity);
+            // const physicsBody = this.game.rigidBodies[0].userData.physicsBody;
+            // let vr = this.currDir.clone();
+            // const velocity = new Ammo.btVector3(vr.x, vr.y, vr.z);
+            // velocity.op_mul(25);
+            // physicsBody.setLinearVelocity(velocity);
             anim = "push";
           }
 
+          console.log(blocked);
           this.action = anim;
           break;
         case "backward":
