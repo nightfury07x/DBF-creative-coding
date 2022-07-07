@@ -12,6 +12,7 @@ class Player {
     this.init(game, options);
     // this.raycaster = new THREE.Raycaster();
     this.blocked = false;
+    this.prevBlocked = false;
   }
 
   init(game, options) {
@@ -158,9 +159,8 @@ class Player {
       return;
     }
 
-    const speed = 400;
+    const speed = 300;
     var angle;
-    let blocked = false;
     let anim = "run2";
     this.dirs.forEach((dir) => {
       switch (dir) {
@@ -177,7 +177,7 @@ class Player {
           break;
         case "forward":
           const pos = this.object.position.clone();
-          pos.y += 30;
+          // pos.y += 50;
           let direction = new THREE.Vector3();
           this.object.getWorldDirection(direction);
           let raycaster = new THREE.Raycaster(pos, direction);
@@ -185,20 +185,24 @@ class Player {
 
           // blocked = this.game.sphereBBox.intersectsBox(this.game.cubeBBox);
           const intersect = raycaster.intersectObjects(colliders);
-
+          this.prevBlocked = this.blocked;
           if (intersect.length > 0) {
             if (intersect[0].distance < 60) {
-              blocked = true;
+              this.blocked = true;
             }
           }
 
-          if (!blocked) {
+          if (this.blocked || this.prevBlocked) {
             this.object.position.add(
-              this.currDir.clone().multiplyScalar(dt * speed)
+              this.currDir.clone().multiplyScalar(dt * speed/2.5)
             );
+            colliders[0].position.add(
+              this.currDir.clone().multiplyScalar(dt * speed/2.5)
+            );
+            
             anim = "push";
           } else {
-            colliders[0].position.add(
+            this.object.position.add(
               this.currDir.clone().multiplyScalar(dt * speed)
             );
             // const physicsBody = this.game.rigidBodies[0].userData.physicsBody;
@@ -206,10 +210,10 @@ class Player {
             // const velocity = new Ammo.btVector3(vr.x, vr.y, vr.z);
             // velocity.op_mul(25);
             // physicsBody.setLinearVelocity(velocity);
-            anim = "push";
+            anim = "run2";
           }
 
-          console.log(blocked);
+          console.log(this.blocked, this.prevBlocked);
           this.action = anim;
           break;
         case "backward":
@@ -225,6 +229,7 @@ class Player {
           physicsBody.setLinearVelocity(stop);
           break;
       }
+      this.blocked = false;
     });
     this.updateSocket();
   }
