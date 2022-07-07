@@ -112,6 +112,12 @@ class Player {
         player.socket.on("remoteData", function (data) {
           game.remoteData = data;
         });
+        player.socket.on("initBox", function (data) {
+          console.log('data', data);
+          Object.entries(data).forEach(([index, pos]) => {
+            game.colliders[index].position.set(pos.x, pos.y, pos.z);
+         });
+        });
         player.socket.on("updateMovingBox", function (data) {
           game.colliders[data.index].position.set(data.x, data.y, data.z);
         });
@@ -199,7 +205,7 @@ class Player {
           const intersect = raycaster.intersectObjects(colliders);
           this.prevBlocked = this.blocked;
           if (intersect.length > 0) {
-            if (intersect[0].distance < 60) {
+            if (intersect[0].distance < 40) {
               this.blocked = true;
             }
           }
