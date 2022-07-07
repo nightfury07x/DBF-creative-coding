@@ -113,10 +113,10 @@ class Player {
           game.remoteData = data;
         });
         player.socket.on("initBox", function (data) {
-          console.log('data', data);
+          console.log("data", data);
           Object.entries(data).forEach(([index, pos]) => {
             game.colliders[index].position.set(pos.x, pos.y, pos.z);
-         });
+          });
         });
         player.socket.on("updateMovingBox", function (data) {
           game.colliders[data.index].position.set(data.x, data.y, data.z);
@@ -235,6 +235,8 @@ class Player {
             // physicsBody.setLinearVelocity(velocity);
             anim = "run2";
           }
+
+          // console.log(this.blocked, this.prevBlocked);
           this.action = anim;
           break;
         case "backward":
