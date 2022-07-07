@@ -194,7 +194,7 @@ class Player {
           const colliders = this.game.colliders;
           const envColliders = this.game.envColliders;
 
-          const intersect1 = raycaster.intersectObjects(envColliders);
+          const intersect1 = raycaster.intersectObjects(envColliders, true);
           if (intersect1.length > 0) {
             if (intersect1[0].distance < 60) {
               return;
@@ -235,8 +235,6 @@ class Player {
             // physicsBody.setLinearVelocity(velocity);
             anim = "run2";
           }
-
-          console.log(this.blocked, this.prevBlocked);
           this.action = anim;
           break;
         case "backward":
@@ -330,7 +328,6 @@ class Player {
     } else if (event.key == "s" || event.key == "S") {
       filtered = this.dirs.filter((dir) => dir != "backward");
       this.action = "idle";
-      console.log("idle action");
     }
 
     this.dirs = filtered;
