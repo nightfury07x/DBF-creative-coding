@@ -23,6 +23,7 @@ io.sockets.on("connection", myConnection);
 function myConnection(socket) {
   console.log("new connection id :" + socket.id);
   socket.userData = { x: 0, y: 0, z: 0, heading: 0 }; //Default values;
+  socket.boxData = { x: 0, y: 0, z: 0, index: 0 }; //Default values;
   socket.emit("setId", { id: socket.id });
 
   socket.on("init", function (data) {
@@ -44,6 +45,14 @@ function myConnection(socket) {
     socket.userData.z = data.z;
     socket.userData.heading = data.h;
     (socket.userData.pb = data.pb), (socket.userData.action = data.action);
+  });
+
+  socket.on("updateMovingBox", function (data) {
+    socket.boxData.index = data.index;
+    socket.boxData.x = data.x;
+    socket.boxData.y = data.y;
+    socket.boxData.z = data.z;
+    socket.broadcast.emit("updateMovingBox", socket.boxData);
   });
 }
 

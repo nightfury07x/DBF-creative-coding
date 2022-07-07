@@ -25,6 +25,7 @@ export default class Game {
     const glbLoader = new THREE.GLTFLoader();
     this.rigidBodies = [];
     this.colliders = [];
+    this.envColliders = [];
     this.push = false;
     this.currentDirection;
 
@@ -59,7 +60,7 @@ export default class Game {
     this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
     this.createBox(100, 50);
-    // this.createBox(100, 400);
+    // this.createBox(200, 50);
     // this.createBox(70, 200);
     this.setWorld();
     this.setWorldFence();
@@ -81,16 +82,15 @@ export default class Game {
 
     box.castShadow = true;
     box.receiveShadow = true;
-
     box.updateMatrixWorld();
 
-    this.cubeBoxHelper = new THREE.BoxHelper(box, 0x00ff00);
-    this.cubeBoxHelper.update();
-    this.cubeBBox = new THREE.Box3();
-    this.cubeBBox.setFromObject(this.cubeBoxHelper);
-    this.cubeBoxHelper.visible = true;
+    // this.cubeBoxHelper = new THREE.BoxHelper(box, 0x00ff00);
+    // this.cubeBoxHelper.update();
+    // this.cubeBBox = new THREE.Box3();
+    // this.cubeBBox.setFromObject(this.cubeBoxHelper);
+    // this.cubeBoxHelper.visible = true;
 
-    this.scene.add(this.cubeBoxHelper);
+    // this.scene.add(this.cubeBoxHelper);
     this.scene.add(box);
 
     // //Ammo js Section
@@ -399,14 +399,14 @@ export default class Game {
 
     await delay(1000);
 
-    if (this.player.object) {
-      this.sphereBoxHelper = new THREE.BoxHelper(this.player.object, 0x00ff00);
-      this.sphereBoxHelper.update();
-      this.sphereBBox = new THREE.Box3();
-      this.sphereBBox.setFromObject(this.sphereBoxHelper);
-      this.sphereBoxHelper.visible = true;
-      this.scene.add(this.sphereBoxHelper);
-    }
+    // if (this.player.object) {
+    //   this.sphereBoxHelper = new THREE.BoxHelper(this.player.object, 0x00ff00);
+    //   this.sphereBoxHelper.update();
+    //   this.sphereBBox = new THREE.Box3();
+    //   this.sphereBBox.setFromObject(this.sphereBoxHelper);
+    //   this.sphereBoxHelper.visible = true;
+    //   this.scene.add(this.sphereBoxHelper);
+    // }
 
     // if (this.player.object) {
     //   const mass = 100;
@@ -521,7 +521,7 @@ export default class Game {
   }
 
   setWorldFence() {
-    const geometry = new THREE.BoxGeometry(2000, 40, 20);
+    const geometry = new THREE.BoxGeometry(2000, 80, 20);
     const material = new THREE.MeshLambertMaterial({ color: "#81ecec" });
     const box1 = new THREE.Mesh(geometry, material);
     box1.position.set(0, 20, 1000);
@@ -531,7 +531,7 @@ export default class Game {
     box2.position.set(0, 20, -1000);
     this.scene.add(box2);
 
-    const geometry1 = new THREE.BoxGeometry(20, 40, 2000);
+    const geometry1 = new THREE.BoxGeometry(20, 80, 2000);
     const box3 = new THREE.Mesh(geometry1, material);
     box3.position.set(1000, 20, 0);
     this.scene.add(box3);
@@ -540,10 +540,10 @@ export default class Game {
     box4.position.set(-1000, 20, 0);
     this.scene.add(box4);
 
-    this.colliders.push(box1);
-    this.colliders.push(box2);
-    this.colliders.push(box3);
-    this.colliders.push(box4);
+    this.envColliders.push(box1);
+    this.envColliders.push(box2);
+    this.envColliders.push(box3);
+    this.envColliders.push(box4);
   }
 
   animate() {
@@ -569,14 +569,14 @@ export default class Game {
       game.animate();
     });
 
-    if (this.sphereBoxHelper) {
-      this.sphereBoxHelper.update();
-      this.sphereBBox.setFromObject(this.sphereBoxHelper);
-    }
-    if (this.cubeBoxHelper) {
-      this.cubeBoxHelper.update();
-      this.cubeBBox.setFromObject(this.cubeBoxHelper);
-    }
+    // if (this.sphereBoxHelper) {
+    //   this.sphereBoxHelper.update();
+    //   this.sphereBBox.setFromObject(this.sphereBoxHelper);
+    // }
+    // if (this.cubeBoxHelper) {
+    //   this.cubeBoxHelper.update();
+    //   this.cubeBBox.setFromObject(this.cubeBoxHelper);
+    // }
 
     if (this.physicsWorld) game.updatePhysics(dt);
     this.renderer.render(this.scene, this.camera);

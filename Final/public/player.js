@@ -13,6 +13,7 @@ class Player {
     // this.raycaster = new THREE.Raycaster();
     this.blocked = false;
     this.prevBlocked = false;
+    this.movingBox;
   }
 
   init(game, options) {
@@ -111,6 +112,9 @@ class Player {
         player.socket.on("remoteData", function (data) {
           game.remoteData = data;
         });
+        player.socket.on("updateMovingBox", function (data) {
+          game.colliders[data.index].position.set(data.x, data.y, data.z);
+        });
         player.socket.on("deletePlayer", function (data) {
           const players = game.remotePlayers.filter(function (player) {
             if (player.id == data.id) {
@@ -177,11 +181,19 @@ class Player {
           break;
         case "forward":
           const pos = this.object.position.clone();
-          // pos.y += 50;
+          pos.y += 50;
           let direction = new THREE.Vector3();
           this.object.getWorldDirection(direction);
           let raycaster = new THREE.Raycaster(pos, direction);
           const colliders = this.game.colliders;
+          const envColliders = this.game.envColliders;
+
+          const intersect1 = raycaster.intersectObjects(envColliders);
+          if (intersect1.length > 0) {
+            if (intersect1[0].distance < 60) {
+              return;
+            }
+          }
 
           // blocked = this.game.sphereBBox.intersectsBox(this.game.cubeBBox);
           const intersect = raycaster.intersectObjects(colliders);
@@ -196,9 +208,14 @@ class Player {
             this.object.position.add(
               this.currDir.clone().multiplyScalar((dt * speed) / 2.5)
             );
-            colliders[0].position.add(
+
+            intersect[0].object.position.add(
               this.currDir.clone().multiplyScalar((dt * speed) / 2.5)
             );
+
+            this.movingBox = colliders.indexOf(intersect[0].object);
+
+            this.updateBoxSocket();
 
             anim = "push";
           } else {
@@ -328,6 +345,17 @@ class Player {
         h: this.object.rotation.y,
         pb: this.object.rotation.x,
         action: this.action,
+      });
+    }
+  }
+
+  updateBoxSocket() {
+    if (this.socket !== undefined) {
+      this.socket.emit("updateMovingBox", {
+        index: this.movingBox,
+        x: this.game.colliders[this.movingBox].position.x,
+        y: this.game.colliders[this.movingBox].position.y,
+        z: this.game.colliders[this.movingBox].position.z,
       });
     }
   }
