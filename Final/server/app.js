@@ -18,6 +18,8 @@ var io = socket(server, {
   allowEIO3: true,
 });
 
+var boxData = {};
+
 io.sockets.on("connection", myConnection);
 
 function myConnection(socket) {
@@ -34,6 +36,13 @@ function myConnection(socket) {
     socket.userData.z = data.z;
     socket.userData.heading = data.h;
     (socket.userData.pb = data.pb), (socket.userData.action = "idle");
+
+    if (Object.keys(boxData).length > 0) {
+      io.to(socket.id).emit("initBox", boxData);
+    }
+    // for ((key, value) in boxData) {
+
+    // }
   });
   socket.on("disconnect", function () {
     socket.broadcast.emit("deletePlayer", { id: socket.id });
@@ -52,6 +61,8 @@ function myConnection(socket) {
     socket.boxData.x = data.x;
     socket.boxData.y = data.y;
     socket.boxData.z = data.z;
+
+    boxData[data.index] = {x: data.x, y: data.y, z: data.z};
     socket.broadcast.emit("updateMovingBox", socket.boxData);
   });
 }
@@ -83,4 +94,4 @@ setInterval(function () {
   if (pack.length > 0) {
     io.emit("remoteData", pack);
   }
-}, 40);
+}, 15);
