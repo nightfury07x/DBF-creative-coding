@@ -16,19 +16,19 @@ export default class Game {
     this.boxTypes = {
       type1: {
         tag: "TYPE_1",
-        color: "#e84393",
+        color: "#feca57",
       },
-      type1: {
+      type2: {
         tag: "TYPE_2",
-        color: "#e84393",
+        color: "#54a0ff",
       },
-      type1: {
+      type3: {
         tag: "TYPE_3",
-        color: "#e84393",
+        color: "#ee5253",
       },
-      type1: {
+      type4: {
         tag: "TYPE_4",
-        color: "#e84393",
+        color: "#1dd1a1",
       },
     };
 
@@ -45,6 +45,8 @@ export default class Game {
     this.envColliders = [];
     this.push = false;
     this.currentDirection;
+    this.boxHouses = [];
+    this.boxes = [];
 
     this.clock = new THREE.Clock();
 
@@ -84,35 +86,38 @@ export default class Game {
   }
 
   loadBoxes() {
-    this.createBox(100, 50, "type1");
+    this.createBox(50, 50, 50, this.boxTypes["type1"]);
+    this.createBox(100, 50, 80, this.boxTypes["type2"]);
+    this.createBox(250, 50, 250, this.boxTypes["type3"]);
+    this.createBox(500, 50, 350, this.boxTypes["type4"]);
   }
 
-  createBox(x, height, type) {
-    let pos = { x: x, y: height, z: 0 };
-    let radius = 50;
-    let quat = { x: 0, y: 0, z: 0, w: 1 };
-    let mass = 1;
+  createBox(x, y, z, type) {
+    const { tag, color } = type;
+    let pos = { x: x, y: y, z: z };
+    // let radius = 50;
+    // let quat = { x: 0, y: 0, z: 0, w: 1 };
+    // let mass = 1
 
     const geometry = new THREE.BoxGeometry(50, 50, 50);
-
-    const material = new THREE.MeshLambertMaterial({ color: "#ff7675" });
+    const material = new THREE.MeshLambertMaterial({ color });
     const box = new THREE.Mesh(geometry, material);
-
     box.position.set(pos.x, pos.y, pos.z);
-
     box.castShadow = true;
+    box.userData.tag = tag;
     // box.receiveShadow = true;
     box.updateMatrixWorld();
 
-    // this.cubeBoxHelper = new THREE.BoxHelper(box, 0x00ff00);
-    // this.cubeBoxHelper.update();
-    // this.cubeBBox = new THREE.Box3();
-    // this.cubeBBox.setFromObject(this.cubeBoxHelper);
-    // this.cubeBoxHelper.visible = true;
-
-    // this.scene.add(this.cubeBoxHelper);
+    const cubeBoxHelper = new THREE.BoxHelper(box, 0x00ff00);
+    cubeBoxHelper.visible = false;
+    cubeBoxHelper.update();
+    const cubeBBox = new THREE.Box3();
+    cubeBBox.setFromObject(cubeBoxHelper);
+    this.boxes.push({ helper: cubeBoxHelper, cube: cubeBBox, tag });
     this.scene.add(box);
+    this.scene.add(cubeBoxHelper);
 
+    this.colliders.push(box);
     // //Ammo js Section
     // let transform = new Ammo.btTransform();
     // transform.setIdentity();
@@ -142,7 +147,6 @@ export default class Game {
 
     // box.userData.physicsBody = body;
     // this.rigidBodies.push(box);
-    this.colliders.push(box);
   }
 
   setRenderer() {
@@ -543,19 +547,28 @@ export default class Game {
   }
 
   setBoxStoreHouses() {
-    this.drawBoxHouse("#e84393", 880, 100, 880);
-    this.drawBoxHouse("#0984e3", -880, 100, -880);
-    this.drawBoxHouse("#fdcb6e", 880, 100, -880);
-    this.drawBoxHouse("#6c5ce7", -880, 100, 880);
+    this.drawBoxHouse(880, 100, 880, this.boxTypes["type1"]);
+    this.drawBoxHouse(-880, 100, -880, this.boxTypes["type2"]);
+    this.drawBoxHouse(880, 100, -880, this.boxTypes["type3"]);
+    this.drawBoxHouse(-880, 100, 880, this.boxTypes["type4"]);
   }
 
-  drawBoxHouse(color, x, y, z) {
+  drawBoxHouse(x, y, z, type) {
+    const { color, tag } = type;
     const geometry = new THREE.BoxGeometry(200, 200, 200);
-    const material = new THREE.MeshLambertMaterial({ color: "#81ecec" });
+    const material = new THREE.MeshLambertMaterial({ color: color });
     const box = new THREE.Mesh(geometry, material);
     box.position.set(x, y, z);
     const boxHelper = new THREE.BoxHelper(box, color);
+    box.visible = false;
+    box.userData.tag = tag;
+    boxHelper.update();
     this.scene.add(boxHelper);
+
+    const cubeBBox = new THREE.Box3();
+    cubeBBox.setFromObject(boxHelper);
+    this.scene.add(box);
+    this.boxHouses.push(cubeBBox);
   }
 
   setWorldFence() {
@@ -607,14 +620,13 @@ export default class Game {
       game.animate();
     });
 
-    // if (this.sphereBoxHelper) {
-    //   this.sphereBoxHelper.update();
-    //   this.sphereBBox.setFromObject(this.sphereBoxHelper);
-    // }
-    // if (this.cubeBoxHelper) {
-    //   this.cubeBoxHelper.update();
-    //   this.cubeBBox.setFromObject(this.cubeBoxHelper);
-    // }
+    this.boxes.forEach((element) => {
+      element.helper.update();
+      element.cube.setFromObject(element.helper);
+    });
+
+    if (this.boxHouses[0].intersectsBox(this.boxes[0].cube)) {
+    }
 
     if (this.physicsWorld) game.updatePhysics(dt);
     this.renderer.render(this.scene, this.camera);
