@@ -7,8 +7,8 @@ export default class Game {
     this.scene;
     this.renderer;
     this.remotePlayers = [];
-		this.remoteColliders = [];
-		this.initialisingPlayers = [];
+    this.remoteColliders = [];
+    this.initialisingPlayers = [];
     this.remoteData = [];
 
     this.assetsPath = "../assets/";
@@ -23,6 +23,9 @@ export default class Game {
 
     const loader = new THREE.FBXLoader();
     this.rigidBodies = [];
+    this.colliders = [];
+    this.push = false;
+    this.currentDirection;
 
     this.clock = new THREE.Clock();
 
@@ -54,9 +57,9 @@ export default class Game {
     );
     this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
-    this.createBox(100, 300);
-    this.createBox(100, 400);
-    this.createBox(70, 200);
+    this.createBox(100, 100);
+    // this.createBox(100, 400);
+    // this.createBox(70, 200);
     this.setWorld();
     this.loadPlayer();
   }
@@ -65,21 +68,30 @@ export default class Game {
     let pos = { x: x, y: height, z: 0 };
     let radius = 50;
     let quat = { x: 0, y: 0, z: 0, w: 1 };
-    let mass = 100;
+    let mass = 1;
 
     const geometry = new THREE.BoxGeometry(50, 50, 50);
 
     const material = new THREE.MeshLambertMaterial({ color: "#81ecec" });
-    const ball = new THREE.Mesh(geometry, material);
+    const box = new THREE.Mesh(geometry, material);
 
-    ball.position.set(pos.x, pos.y, pos.z);
+    box.position.set(pos.x, pos.y, pos.z);
 
-    ball.castShadow = true;
-    ball.receiveShadow = true;
+    box.castShadow = true;
+    box.receiveShadow = true;
 
-    this.scene.add(ball);
+    box.updateMatrixWorld();
 
-    //Ammo js Section
+    this.cubeBoxHelper = new THREE.BoxHelper(box, 0x00ff00);
+    this.cubeBoxHelper.update();
+    this.cubeBBox = new THREE.Box3();
+    this.cubeBBox.setFromObject(this.cubeBoxHelper);
+    this.cubeBoxHelper.visible = true;
+
+    this.scene.add(this.cubeBoxHelper);
+    this.scene.add(box);
+
+    // //Ammo js Section
     let transform = new Ammo.btTransform();
     transform.setIdentity();
     transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
@@ -106,8 +118,9 @@ export default class Game {
 
     this.physicsWorld.addRigidBody(body);
 
-    ball.userData.physicsBody = body;
-    this.rigidBodies.push(ball);
+    box.userData.physicsBody = body;
+    this.rigidBodies.push(box);
+    this.colliders.push(box);
   }
 
   setRenderer() {
@@ -301,7 +314,7 @@ export default class Game {
   }
 
   updatePhysics(deltaTime) {
-    this.physicsWorld.stepSimulation(deltaTime, 100);
+    this.physicsWorld.stepSimulation(deltaTime, 10);
 
     // Update rigid bodies
     for (let i = 0; i < this.rigidBodies.length; i++) {
@@ -381,96 +394,125 @@ export default class Game {
     await delay(1000);
 
     if (this.player.object) {
-      const mass = 10;
-      const pos = this.player.object.position.clone();
-      const quat = { x: 0, y: 0, z: 0, w: 1 };
-
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(1 * 0.5, 1 * 0.5, 1 * 0.5)
-      );
-      colShape.setMargin(0.05);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      colShape.calculateLocalInertia(mass, localInertia);
-
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      this.physicsWorld.addRigidBody(body);
-
-      // this.player.object.userData.physicsBody = body;
-      // this.rigidBodies.push(this.player.object);
+      this.sphereBoxHelper = new THREE.BoxHelper(this.player.object, 0x00ff00);
+      this.sphereBoxHelper.update();
+      this.sphereBBox = new THREE.Box3();
+      this.sphereBBox.setFromObject(this.sphereBoxHelper);
+      this.sphereBoxHelper.visible = true;
+      this.scene.add(this.sphereBoxHelper);
     }
+
+    // if (this.player.object) {
+    //   const mass = 100;
+    //   const pos = this.player.object.position.clone();
+    //   const quat = { x: 0, y: 0, z: 0, w: 1 };
+
+    //   let transform = new Ammo.btTransform();
+    //   transform.setIdentity();
+    //   transform.setOrigin(new Ammo.btVector3(pos.x, 20, pos.z));
+    //   transform.setRotation(
+    //     new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+    //   );
+    //   let motionState = new Ammo.btDefaultMotionState(transform);
+
+    //   let colShape = new Ammo.btBoxShape(
+    //     new Ammo.btVector3(1 * 0.5, 1 * 0.5, 1 * 0.5)
+    //   );
+    //   colShape.setMargin(0.05);
+
+    //   let localInertia = new Ammo.btVector3(0, 0, 0);
+    //   colShape.calculateLocalInertia(mass, localInertia);
+
+    //   let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+    //     mass,
+    //     motionState,
+    //     colShape,
+    //     localInertia
+    //   );
+    //   let body = new Ammo.btRigidBody(rbInfo);
+
+    //   this.physicsWorld.addRigidBody(body);
+
+    //   this.player.object.userData.physicsBody = body;
+    //   this.rigidBodies.push(this.player.object);
+    // }
   }
-	getRemotePlayerById(id){
-		if (this.remotePlayers===undefined || this.remotePlayers.length==0) return;
-		
-		const players = this.remotePlayers.filter(function(player){
-			if (player.id == id) return true;
-		});	
-		
-		if (players.length==0) return;
-		
-		return players[0];
-	}
-  updateRemotePlayers(dt){
-		if (this.remoteData===undefined || this.remoteData.length == 0 || this.player===undefined || this.player.id===undefined) return;
-		
-		const newPlayers = [];
-		const game = this;
-		//Get all remotePlayers from remoteData array
-		const remotePlayers = [];
-		const remoteColliders = [];
-		
-		this.remoteData.forEach( function(data){
-			// if it's the same as game.player.id, we can ignore since that's the local player
-			if (game.player.id != data.id){
-				//Is this player being initialised?
-				let iplayer;
-				game.initialisingPlayers.forEach( function(player){
-					if (player.id == data.id) iplayer = player;
-				});
-				//If not being initialised check the remotePlayers array
-				if (iplayer===undefined){
-					let rplayer;
-					game.remotePlayers.forEach( function(player){
-						if (player.id == data.id) rplayer = player;
-					});
-					if (rplayer===undefined){
-						//Initialise player
-						game.initialisingPlayers.push( new Player( game, data ));
-					}else{
-						//Player exists
-						remotePlayers.push(rplayer);
-						remoteColliders.push(rplayer.collider);
-					}
-				}
-			}
-		});
-		
-		this.scene.children.forEach( function(object){
-			if (object.userData.remotePlayer && game.getRemotePlayerById(object.userData.id)==undefined){
-				game.scene.remove(object);
-			}	
-		});
-		
-		this.remotePlayers = remotePlayers;
-		this.remoteColliders = remoteColliders;
-		this.remotePlayers.forEach(function(player){ player.update( dt ); });	
-	}
+
+  moveBox(dir) {
+    let physicsBody = this.rigidBodies[0].userData.physicsBody;
+    let vr = dir.clone();
+    const velocity = new Ammo.btVector3(vr.x, vr.y, vr.z);
+    velocity.op_mul(20);
+    physicsBody.setLinearVelocity(velocity);
+  }
+  getRemotePlayerById(id) {
+    if (this.remotePlayers === undefined || this.remotePlayers.length == 0)
+      return;
+
+    const players = this.remotePlayers.filter(function (player) {
+      if (player.id == id) return true;
+    });
+
+    if (players.length == 0) return;
+
+    return players[0];
+  }
+  updateRemotePlayers(dt) {
+    if (
+      this.remoteData === undefined ||
+      this.remoteData.length == 0 ||
+      this.player === undefined ||
+      this.player.id === undefined
+    )
+      return;
+
+    const newPlayers = [];
+    const game = this;
+    //Get all remotePlayers from remoteData array
+    const remotePlayers = [];
+    const remoteColliders = [];
+
+    this.remoteData.forEach(function (data) {
+      // if it's the same as game.player.id, we can ignore since that's the local player
+      if (game.player.id != data.id) {
+        //Is this player being initialised?
+        let iplayer;
+        game.initialisingPlayers.forEach(function (player) {
+          if (player.id == data.id) iplayer = player;
+        });
+        //If not being initialised check the remotePlayers array
+        if (iplayer === undefined) {
+          let rplayer;
+          game.remotePlayers.forEach(function (player) {
+            if (player.id == data.id) rplayer = player;
+          });
+          if (rplayer === undefined) {
+            //Initialise player
+            game.initialisingPlayers.push(new Player(game, data));
+          } else {
+            //Player exists
+            remotePlayers.push(rplayer);
+            remoteColliders.push(rplayer.collider);
+          }
+        }
+      }
+    });
+
+    this.scene.children.forEach(function (object) {
+      if (
+        object.userData.remotePlayer &&
+        game.getRemotePlayerById(object.userData.id) == undefined
+      ) {
+        game.scene.remove(object);
+      }
+    });
+
+    this.remotePlayers = remotePlayers;
+    this.remoteColliders = remoteColliders;
+    this.remotePlayers.forEach(function (player) {
+      player.update(dt);
+    });
+  }
 
   animate() {
     const game = this;
@@ -494,6 +536,15 @@ export default class Game {
     requestAnimationFrame(function () {
       game.animate();
     });
+
+    if (this.sphereBoxHelper) {
+      this.sphereBoxHelper.update();
+      this.sphereBBox.setFromObject(this.sphereBoxHelper);
+    }
+    if (this.cubeBoxHelper) {
+      this.cubeBoxHelper.update();
+      this.cubeBBox.setFromObject(this.cubeBoxHelper);
+    }
 
     if (this.physicsWorld) game.updatePhysics(dt);
     this.renderer.render(this.scene, this.camera);
