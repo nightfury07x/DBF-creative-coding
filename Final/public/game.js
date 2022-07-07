@@ -57,7 +57,7 @@ export default class Game {
     );
     this.physicsWorld.setGravity(new Ammo.btVector3(0, -100, 0));
 
-    this.createBox(100, 100);
+    // this.createBox(100, 100);
     // this.createBox(100, 400);
     // this.createBox(70, 200);
     this.setWorld();
@@ -234,12 +234,12 @@ export default class Game {
   //   this.controls.target.set(0, 10, 0);
   //   this.controls.update();
   // }
-  
+
   loadEnvironment(loader) {
     const game = this;
     loader.load(`${this.assetsPath}fbx/survival/rockA.fbx`, function (object) {
       object.name = "rockFlatGlass";
-      console.log('loading');
+      console.log("loading");
       object.traverse(function (child) {
         if (child.isMesh) {
           child.material.map = null;
@@ -266,7 +266,7 @@ export default class Game {
     //   game.scene.add(object);
     // });
 
-    console.log('object');
+    console.log("object");
   }
 
   loadObjects() {
